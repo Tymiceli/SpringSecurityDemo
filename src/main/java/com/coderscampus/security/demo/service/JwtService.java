@@ -24,8 +24,6 @@ public class JwtService {
 	private Long expirationTimeInMillis;
 	
 	public String generateToken(Map<String, Object> extraClaims, UserDetails user) {
-		
-//		Long expTimeLong = Long.valueOf(expirationTimeInMillis);
 			
 		String jws = Jwts.builder()
 				.claims(extraClaims)
@@ -35,10 +33,6 @@ public class JwtService {
 			    .issuedAt(new Date())
 			    .signWith(getSigningKey())
 			    .compact();
-//	
-//		System.out.println(expirationTimeInMillis);
-//		System.out.println(jws);
-		
 		return jws;
 	}
 
@@ -47,8 +41,6 @@ public class JwtService {
 		byte[] jwtSigningKeyAsBytes = Decoders.BASE64.decode(jwtSigningKey);
 		SecretKey secretKey = Keys.hmacShaKeyFor(jwtSigningKeyAsBytes);
 
-//		SecretKey jwtSigningKey1 = Jwts.SIG.HS256.key().build();
-		
 		return secretKey;
 	}
 
