@@ -2,45 +2,64 @@ package com.coderscampus.security.demo.service;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
 	
-	@Value("jwt.signingKey")
+	@Value("${jwt.signingKey}")
 	private String jwtSigningKey;
 	
-	@Value("jwt.expirationTimeInMillis")
-//	private Long expirationTimeInMillis;
-
-	public String generateToken(HashMap<String, Object> extraClaims, UserDetails user) {
+	@Value("${jwt.expirationTimeInMillis}")
+	private Long expirationTimeInMillis;
+	
+	public String generateToken(Map<String, Object> extraClaims, UserDetails user) {
+		
+//		Long expTimeLong = Long.valueOf(expirationTimeInMillis);
 			
 		String jws = Jwts.builder()
 				.claims(extraClaims)
 				.issuer("Tyler Miceli")
 				.subject(user.getUsername())
-//			    .expiration(new Date().getTime() + expirationTimeInMillis) //a java.util.Date
+			    .expiration(new Date(System.currentTimeMillis() + expirationTimeInMillis)) //a java.util.Date
 			    .issuedAt(new Date())
 			    .signWith(getSigningKey())
 			    .compact();
-	
+//	
+//		System.out.println(expirationTimeInMillis);
+//		System.out.println(jws);
+		
 		return jws;
 	}
 
 	private Key getSigningKey() {
-
-		SecretKey jwtSigningKey1 = Jwts.SIG.HS256.key().build();
 		
-		return jwtSigningKey1;
+		byte[] jwtSigningKeyAsBytes = Decoders.BASE64.decode(jwtSigningKey);
+		SecretKey secretKey = Keys.hmacShaKeyFor(jwtSigningKeyAsBytes);
+
+//		SecretKey jwtSigningKey1 = Jwts.SIG.HS256.key().build();
+		
+		return secretKey;
 	}
+
+	public void setJwtSigningKey(String jwtSigningKey) {
+		this.jwtSigningKey = jwtSigningKey;
+	}
+
+	public void setExpirationTimeInMillis(Long expirationTimeInMillis) {
+		this.expirationTimeInMillis = expirationTimeInMillis;
+	}
+	
+	
 }
 	

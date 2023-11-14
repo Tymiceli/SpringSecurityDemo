@@ -1,7 +1,9 @@
 package com.coderscampus.security.demo.service;
 
 import java.util.HashMap;
+import java.util.Map;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -11,16 +13,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.coderscampus.security.demo.domain.User;
 
 @TestInstance(Lifecycle.PER_CLASS)
-@SpringBootTest
+//@SpringBootTest
 class JWTServiceTest {
 	
 	@Autowired
 	private JwtService sut;
 	
-//	@BeforeAll
-//	static void init() {
-//		sut = new JwtService();
-//	}
+	@BeforeAll        
+	void init() {
+		sut = new JwtService();
+	}
 
 	@Test
 	void testGenerateTokens() {
@@ -34,7 +36,7 @@ class JWTServiceTest {
 		 */
 		
 		// Arrange
-		HashMap<String, Object> extraClaims = new HashMap<>();
+		Map<String, Object> extraClaims = new HashMap<>();
 		User user = new User("tyler@coderscampus.com", "abc123");
 		
 		// Act
