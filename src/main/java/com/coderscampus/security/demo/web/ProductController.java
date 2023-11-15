@@ -17,7 +17,6 @@ public class ProductController {
 	
 	
 	public ProductController () {
-		
 		allProducts.add(new Product(1, "Product #1", new BigDecimal("19.99")));
 		allProducts.add(new Product(1, "Product #2", new BigDecimal("29.99")));
 		allProducts.add(new Product(1, "Product #3", new BigDecimal("39.99")));
