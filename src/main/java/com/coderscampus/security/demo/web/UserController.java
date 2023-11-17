@@ -1,7 +1,6 @@
 package com.coderscampus.security.demo.web;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,9 +9,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.coderscampus.security.demo.domain.RefreshToken;
 import com.coderscampus.security.demo.domain.User;
 import com.coderscampus.security.demo.repository.UserRepository;
+import com.coderscampus.security.demo.request.RefreshTokenRequest;
+import com.coderscampus.security.demo.response.AuthenticationResponse;
+import com.coderscampus.security.demo.response.RefreshTokenResponse;
 import com.coderscampus.security.demo.service.JwtService;
+import com.coderscampus.security.demo.service.RefreshTokenService;
+import com.coderscampus.security.demo.service.UserService;
 
 @RestController
 @RequestMapping ("/api/v1/users")
@@ -21,23 +26,43 @@ public class UserController {
 	private PasswordEncoder passwordEncoder;
 	private UserRepository userRepository;
 	private JwtService jwtService;
+	private UserService userService;
+	private RefreshTokenService refreshTokenService;
 	
-	public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+	public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, 
+			UserService userService, RefreshTokenService refreshTokenService) {
 		super();
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtService = jwtService;
+		this.userService = userService;
+		this.refreshTokenService = refreshTokenService;
 	}
 
 	@PostMapping ("")
-	public ResponseEntity<User> signUpUser (@RequestBody User user) {
+	public ResponseEntity<AuthenticationResponse> signUpUser (@RequestBody User user) {
 		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		User savedUser = userRepository.save(user);
-		Map<String, Object> blah = new HashMap<>();
 		
-		jwtService.generateToken(blah, savedUser);
+		String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser.getId());
 		
-		return ResponseEntity.ok(savedUser);	
+		return ResponseEntity.ok(new AuthenticationResponse(savedUser.getUsername(), accessToken, refreshToken.getRefreshToken()));	
 	}
 
+	@PostMapping ("/login")
+	public ResponseEntity<AuthenticationResponse> signInUser (@RequestBody User user) {
+		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
+		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser.getId());
+
+		
+		return ResponseEntity.ok(new AuthenticationResponse(loggedInUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
+	}
+	
+	@PostMapping("/refreshtoken")
+	public ResponseEntity<RefreshTokenResponse> getNewAccessToken (@RequestBody RefreshTokenRequest refreshTokenRequest) { 
+		String accessToken = refreshTokenService.generateNewAccessToken(refreshTokenRequest);
+		return ResponseEntity.ok(new RefreshTokenResponse(accessToken, refreshTokenRequest.refreshToken()));
+	}
 }
